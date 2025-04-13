@@ -1,0 +1,1 @@
+# sekyulait_aplikesyon
