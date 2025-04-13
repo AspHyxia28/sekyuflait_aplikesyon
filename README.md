@@ -104,4 +104,5 @@ Setelah before:
 
 - Testing
 
-  (Belum dicoba laptopnya freeze)
+![image](https://github.com/user-attachments/assets/2196baca-43cc-40ae-8c19-037f5b50d148)
+
