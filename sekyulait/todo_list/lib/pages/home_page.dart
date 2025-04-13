@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:todo_list/database/database_helper.dart';
 import 'package:todo_list/models/task_model.dart';
 
 class HomePage extends StatefulWidget {
@@ -11,55 +11,38 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<TaskModel> tasksList = [];
-
-  void saveOnLocalStorage() {
-    final taskData = tasksList.map((task) => task.toJson()).toList();
-    sharedPreferences?.setStringList('tasks', taskData);
-  }
-
-  void createTask({required TaskModel task}) {
-    setState(() {
-      tasksList.add(task);
-      saveOnLocalStorage();
-    });
-  }
-
-  void readTasks() {
-    setState(() {
-      final taskData = sharedPreferences?.getStringList('tasks') ?? [];
-      tasksList =
-          taskData.map((taskJson) => TaskModel.fromJson(taskJson)).toList();
-    });
-  }
-
-  void updateTask({required String taskId, required TaskModel updatedTask}) {
-    final taskIndex = tasksList.indexWhere((task) => task.id == taskId);
-    setState(() {
-      tasksList[taskIndex] = updatedTask;
-      saveOnLocalStorage();
-    });
-  }
-
-  void deleteTask({required String taskId}) {
-    setState(() {
-      tasksList.removeWhere((task) => task.id == taskId);
-      saveOnLocalStorage();
-    });
-  }
-
+  final DatabaseHelper _dbHelper = DatabaseHelper();
   final TextEditingController taskTextEditingController =
       TextEditingController();
 
-  SharedPreferences? sharedPreferences;
-
   @override
   void initState() {
-    initPrefs();
     super.initState();
+    readTasks();
   }
 
-  void initPrefs() async {
-    sharedPreferences = await SharedPreferences.getInstance();
+  void readTasks() async {
+    final tasks = await _dbHelper.getTasks();
+    setState(() {
+      tasksList = tasks;
+    });
+  }
+
+  void createTask({required TaskModel task}) async {
+    await _dbHelper.insertTask(task);
+    readTasks();
+  }
+
+  void updateTask({
+    required String taskId,
+    required TaskModel updatedTask,
+  }) async {
+    await _dbHelper.updateTask(updatedTask);
+    readTasks();
+  }
+
+  void deleteTask({required String taskId}) async {
+    await _dbHelper.deleteTask(taskId);
     readTasks();
   }
 
@@ -101,8 +84,11 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   value: task.isCompleted,
                                   onChanged: (isChecked) {
-                                    final TaskModel updatedTask = task;
-                                    updatedTask.isCompleted = isChecked!;
+                                    final TaskModel updatedTask = TaskModel(
+                                      id: task.id,
+                                      title: task.title,
+                                      isCompleted: isChecked!,
+                                    );
                                     updateTask(
                                       taskId: updatedTask.id,
                                       updatedTask: updatedTask,

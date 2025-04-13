@@ -1,9 +1,7 @@
-import 'dart:convert';
-
 class TaskModel {
   final String id;
-  String title;
-  bool isCompleted;
+  final String title;
+  final bool isCompleted;
 
   TaskModel({required this.id, required this.title, this.isCompleted = false});
 
@@ -27,8 +25,15 @@ class TaskModel {
     );
   }
 
-  String toJson() => json.encode(toMap());
+  Map<String, Object?> toJson() {
+    return {'id': id, 'title': title, 'isCompleted': isCompleted ? 1 : 0};
+  }
 
-  factory TaskModel.fromJson(String source) =>
-      TaskModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory TaskModel.fromJson(Map<String, dynamic> json) {
+    return TaskModel(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      isCompleted: (json['isCompleted'] as int) == 1,
+    );
+  }
 }
